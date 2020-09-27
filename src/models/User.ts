@@ -7,6 +7,7 @@ declare interface IUser extends Document {
   password: string;
   createdAt?: Date;
   updatedAt?: Date;
+  comparePassword: (password: string) => boolean;
 }
 
 export interface UserModel extends Model<IUser> {}
@@ -40,6 +41,12 @@ export class User {
       }
       done();
     });
+
+    schema.methods.comparePassword = async function (
+      password: string
+    ): Promise<boolean> {
+      return await Password.compare(this.password, password);
+    };
 
     this._model = model<IUser>('User', schema);
   }

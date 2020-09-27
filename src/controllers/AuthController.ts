@@ -30,4 +30,24 @@ export class AuthController {
 
     res.status(HttpStatusCodes.CREATED).json(user);
   }
+
+  @post('/signin')
+  @bodyValidator([
+    body('email').isEmail().withMessage('Email must be vaild'),
+    body('password').trim(),
+  ])
+  @use(validateRequest)
+  async postLogin(req: Request, res: Response, next: NextFunction) {
+    const { email, password } = req.body;
+    const existingUser = await DB.Models.User.findOne({ email });
+    if (!existingUser) {
+      throw new BadRequestError('Invalid email or password');
+    }
+    const isCorrect = await existingUser.comparePassword(password);
+    if (!isCorrect) {
+      throw new BadRequestError('Invalid email or password');
+    }
+
+    res.status(200).json('Log in success');
+  }
 }

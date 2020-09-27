@@ -14,7 +14,7 @@ export class DB {
 
   private constructor() {
     // this is where we make all neccessary connections
-    connect('mongodb://localhost:27017/boilerplate', {
+    connect(process.env.MONGOURI as string, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
