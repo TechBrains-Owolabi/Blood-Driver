@@ -3,6 +3,16 @@ import request from 'supertest';
 import { DB } from '../AppDatabase';
 
 const userOne = {
+  firstName: "Tobiloba",
+  lastName: "Owolabi",
+  phone: "08206723916",
+  city: "Ikeja",
+  state: "Lagos",
+  country: "Nigeria",
+  bloodType:"negative",
+  phoneType: "work",
+  lat: "200",
+  lng: "200",
   email: 'tundey@tunde.com',
   password: 'password',
 };

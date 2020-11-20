@@ -16,17 +16,25 @@ export class AuthController {
       .isLength({ min: 4, max: 20 })
       .withMessage('Password must be between 4 and 20 characters'),
     body('email').isEmail().withMessage('Email must be vaild'),
+    body('firstName').trim(),
+    body('lastName').trim(),
+    body('phone').trim().isLength({min:11, max:11}).withMessage("Pnone number must be 11 characters"),
+    body('city').trim(),
+    body('state').trim(),
+    body('country').trim(),
+    
   ])
   @use(validateRequest)
   async postSignup(req: Request, res: Response, next: NextFunction) {
-    const { email, password } = req.body;
+    
+    const { email, password, firstName, lastName, phone, phoneType, bloodType, city, state, country, lat, lng } = req.body;
     const existingUser = await DB.Models.User.findOne({ email });
 
     if (existingUser) {
       throw new BadRequestError('A user with that email already exists');
     }
 
-    let user = await DB.Models.User.create({ email, password });
+    let user = await DB.Models.User.create({ email, password, firstName, lastName, bloodType, phone, phoneType, city, state, country, lat, lng });
 
     res.status(HttpStatusCodes.CREATED).json(user);
   }

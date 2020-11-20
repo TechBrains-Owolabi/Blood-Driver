@@ -5,6 +5,16 @@ import { Schema, model, Document, Model } from 'mongoose';
 declare interface IUser extends Document {
   email: string;
   password: string;
+  firstName: string;
+  lastName: string;
+  bloodType: string;
+  phone: string;
+  phoneType: string;
+  city: string;
+  state: string;
+  country: string;
+  lat: string;
+  lng: string;
   createdAt?: Date;
   updatedAt?: Date;
   comparePassword: (password: string) => boolean;
@@ -18,6 +28,16 @@ export class User {
   constructor() {
     const schema = new Schema(
       {
+        firstName: {type: String, required: true},
+        lastName: {type: String, required: true},
+        bloodType: { type: String, enum: ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"], default: "O+",},
+        phone: { type: String, required: true },
+        phoneType:{type: String, enum: ["work", "home", "mobile"], default: "mobile",},
+        city: {type: String, required: true},
+        state: {type: String, required: true},
+        country: { type: String, required: true },
+        lat: { type: String, required: false, default:"100.0"},
+        lng: { type: String, required: false, default:"100.0" },
         email: { type: String, required: true },
         password: { type: String, required: true },
       },

@@ -57,18 +57,18 @@ var AuthController = /** @class */ (function () {
     }
     AuthController.prototype.postSignup = function (req, res, next) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, email, password, existingUser, user;
+            var _a, email, password, firstName, lastName, phone, phoneType, bloodType, city, state, country, lat, lng, existingUser, user;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        _a = req.body, email = _a.email, password = _a.password;
+                        _a = req.body, email = _a.email, password = _a.password, firstName = _a.firstName, lastName = _a.lastName, phone = _a.phone, phoneType = _a.phoneType, bloodType = _a.bloodType, city = _a.city, state = _a.state, country = _a.country, lat = _a.lat, lng = _a.lng;
                         return [4 /*yield*/, AppDatabase_1.DB.Models.User.findOne({ email: email })];
                     case 1:
                         existingUser = _b.sent();
                         if (existingUser) {
                             throw new errors_1.BadRequestError('A user with that email already exists');
                         }
-                        return [4 /*yield*/, AppDatabase_1.DB.Models.User.create({ email: email, password: password })];
+                        return [4 /*yield*/, AppDatabase_1.DB.Models.User.create({ email: email, password: password, firstName: firstName, lastName: lastName, bloodType: bloodType, phone: phone, phoneType: phoneType, city: city, state: state, country: country, lat: lat, lng: lng })];
                     case 2:
                         user = _b.sent();
                         res.status(enums_1.HttpStatusCodes.CREATED).json(user);
@@ -110,6 +110,12 @@ var AuthController = /** @class */ (function () {
                 .isLength({ min: 4, max: 20 })
                 .withMessage('Password must be between 4 and 20 characters'),
             express_validator_1.body('email').isEmail().withMessage('Email must be vaild'),
+            express_validator_1.body('firstName').trim(),
+            express_validator_1.body('lastName').trim(),
+            express_validator_1.body('phone').trim().isLength({ min: 11, max: 11 }).withMessage("Pnone number must be 11 characters"),
+            express_validator_1.body('city').trim(),
+            express_validator_1.body('state').trim(),
+            express_validator_1.body('country').trim(),
         ]),
         decorators_1.use(middlewares_1.validateRequest),
         __metadata("design:type", Function),
