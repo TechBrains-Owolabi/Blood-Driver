@@ -1,10 +1,12 @@
 import { connect, connection, Connection } from 'mongoose';
-import { User, UserModel } from './models';
+import { User, UserModel, BloodDriveHost, BloodDriveHostModel } from './models';
 import { DatabaseConnectionError } from './errors';
 
 declare interface IModels {
   User: UserModel;
+  BloodDriveHost: BloodDriveHostModel;
 }
+
 
 export class DB {
   private static instance: DB;
@@ -25,6 +27,7 @@ export class DB {
     // this is where we initialize all models
     this._models = {
       User: new User().model,
+BloodDriveHost: new BloodDriveHost().model,
     };
   }
 

@@ -7,6 +7,7 @@ import { AppRouter } from './AppRouter';
 import { globalErrorHandler } from './middlewares';
 import './controllers/AuthController';
 import './controllers/RootController';
+import './controllers/BloodDriveHostController';
 
 const app = express();
 

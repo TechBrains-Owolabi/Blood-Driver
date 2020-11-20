@@ -17,6 +17,7 @@ var DB = /** @class */ (function () {
         // this is where we initialize all models
         this._models = {
             User: new models_1.User().model,
+            BloodDriveHost: new models_1.BloodDriveHost().model,
         };
     }
     Object.defineProperty(DB, "Models", {
