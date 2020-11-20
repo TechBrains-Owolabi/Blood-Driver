@@ -74,6 +74,16 @@ var User = /** @class */ (function () {
                 });
             });
         });
+        schema.methods.comparePassword = function (password) {
+            return __awaiter(this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, services_1.Password.compare(this.password, password)];
+                        case 1: return [2 /*return*/, _a.sent()];
+                    }
+                });
+            });
+        };
         this._model = mongoose_1.model('User', schema);
     }
     Object.defineProperty(User.prototype, "model", {

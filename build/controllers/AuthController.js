@@ -77,6 +77,31 @@ var AuthController = /** @class */ (function () {
             });
         });
     };
+    AuthController.prototype.postLogin = function (req, res, next) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _a, email, password, existingUser, isCorrect;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _a = req.body, email = _a.email, password = _a.password;
+                        return [4 /*yield*/, AppDatabase_1.DB.Models.User.findOne({ email: email })];
+                    case 1:
+                        existingUser = _b.sent();
+                        if (!existingUser) {
+                            throw new errors_1.BadRequestError('Invalid email or password');
+                        }
+                        return [4 /*yield*/, existingUser.comparePassword(password)];
+                    case 2:
+                        isCorrect = _b.sent();
+                        if (!isCorrect) {
+                            throw new errors_1.BadRequestError('Invalid email or password');
+                        }
+                        res.status(200).json('Log in success');
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
     __decorate([
         decorators_1.post('/signup'),
         decorators_1.bodyValidator([
@@ -91,6 +116,17 @@ var AuthController = /** @class */ (function () {
         __metadata("design:paramtypes", [Object, Object, Function]),
         __metadata("design:returntype", Promise)
     ], AuthController.prototype, "postSignup", null);
+    __decorate([
+        decorators_1.post('/signin'),
+        decorators_1.bodyValidator([
+            express_validator_1.body('email').isEmail().withMessage('Email must be vaild'),
+            express_validator_1.body('password').trim(),
+        ]),
+        decorators_1.use(middlewares_1.validateRequest),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object, Object, Function]),
+        __metadata("design:returntype", Promise)
+    ], AuthController.prototype, "postLogin", null);
     AuthController = __decorate([
         decorators_1.controller('/auth')
     ], AuthController);
