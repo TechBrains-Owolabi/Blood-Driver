@@ -27,7 +27,7 @@ export class DB {
     // this is where we initialize all models
     this._models = {
       User: new User().model,
-BloodDriveHost: new BloodDriveHost().model,
+      BloodDriveHost: new BloodDriveHost().model,
     };
   }
 
