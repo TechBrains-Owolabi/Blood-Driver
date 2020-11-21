@@ -1,4 +1,6 @@
 import { Schema, model, Document, Model } from 'mongoose';
+import { User } from './User';
+const mongoose = require('mongoose')
 
 declare interface IBloodDriveHost extends Document {
     firstName: string;
@@ -17,6 +19,7 @@ declare interface IBloodDriveHost extends Document {
     additionalComment: string;
     lat: string;
     lng: string;
+    user: User;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -44,6 +47,11 @@ export class BloodDriveHost {
           additionalComment: {type: String, required: true},
           lat: { type: String, required: false, default:"100.0"},
           lng: { type: String, required: false, default:"100.0" },
+          user: {
+            type: mongoose.Schema.ObjectId,
+            ref: "User",
+            required: true,
+          },
         },
         {
           toJSON: {
@@ -56,6 +64,7 @@ export class BloodDriveHost {
           timestamps: true,
         }
       );
+      
   
       this._model = model<IBloodDriveHost>('BloodDriveHost', schema);
     }

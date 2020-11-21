@@ -68,6 +68,14 @@ export class User {
       return await Password.compare(this.password, password);
     };
 
+    //Reverse Populate with virtuals
+    schema.virtual("bloodDrives", {
+      ref: "BloodDriveHost",
+      localField: "_id",
+      foreignField: "user",
+      justone: false,
+    });
+
     this._model = model<IUser>('User', schema);
   }
 

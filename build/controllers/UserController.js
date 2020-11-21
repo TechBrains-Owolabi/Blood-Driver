@@ -46,7 +46,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
-var express_validator_1 = require("express-validator");
 var AppDatabase_1 = require("../AppDatabase");
 var decorators_1 = require("../decorators");
 var enums_1 = require("../enums");
@@ -55,88 +54,34 @@ var middlewares_1 = require("../middlewares");
 var AuthController = /** @class */ (function () {
     function AuthController() {
     }
-    AuthController.prototype.postSignup = function (req, res, next) {
+    AuthController.prototype.getMe = function (req, res, next) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, email, password, firstName, lastName, phone, phoneType, bloodType, city, state, country, lat, lng, existingUser, user;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var id, existingUser;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
-                        _a = req.body, email = _a.email, password = _a.password, firstName = _a.firstName, lastName = _a.lastName, phone = _a.phone, phoneType = _a.phoneType, bloodType = _a.bloodType, city = _a.city, state = _a.state, country = _a.country, lat = _a.lat, lng = _a.lng;
-                        return [4 /*yield*/, AppDatabase_1.DB.Models.User.findOne({ email: email })];
+                        id = req.body.setUserId;
+                        return [4 /*yield*/, AppDatabase_1.DB.Models.User.findOne({ id: id }).populate("bloodDrives")];
                     case 1:
-                        existingUser = _b.sent();
-                        if (existingUser) {
+                        existingUser = _a.sent();
+                        if (!existingUser) {
                             throw new errors_1.BadRequestError('A user with that email already exists');
                         }
-                        return [4 /*yield*/, AppDatabase_1.DB.Models.User.create({ email: email, password: password, firstName: firstName, lastName: lastName, bloodType: bloodType, phone: phone, phoneType: phoneType, city: city, state: state, country: country, lat: lat, lng: lng })];
-                    case 2:
-                        user = _b.sent();
-                        req.body.userSetId = user.id;
-                        res.status(enums_1.HttpStatusCodes.CREATED).json(user);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    AuthController.prototype.postLogin = function (req, res, next) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _a, email, password, existingUser, isCorrect;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = req.body, email = _a.email, password = _a.password;
-                        return [4 /*yield*/, AppDatabase_1.DB.Models.User.findOne({ email: email })];
-                    case 1:
-                        existingUser = _b.sent();
-                        if (!existingUser) {
-                            throw new errors_1.BadRequestError('Invalid email or password');
-                        }
-                        return [4 /*yield*/, existingUser.comparePassword(password)];
-                    case 2:
-                        isCorrect = _b.sent();
-                        if (!isCorrect) {
-                            throw new errors_1.BadRequestError('Invalid email or password');
-                        }
-                        res.status(200).json('Log in success');
-                        req.body.userSetId = existingUser.id;
+                        res.status(enums_1.HttpStatusCodes.CREATED).json(existingUser);
                         return [2 /*return*/];
                 }
             });
         });
     };
     __decorate([
-        decorators_1.post('/signup'),
-        decorators_1.bodyValidator([
-            express_validator_1.body('password')
-                .trim()
-                .isLength({ min: 4, max: 20 })
-                .withMessage('Password must be between 4 and 20 characters'),
-            express_validator_1.body('email').isEmail().withMessage('Email must be vaild'),
-            express_validator_1.body('firstName').trim(),
-            express_validator_1.body('lastName').trim(),
-            express_validator_1.body('phone').trim().isLength({ min: 11, max: 11 }).withMessage("Pnone number must be 11 characters"),
-            express_validator_1.body('city').trim(),
-            express_validator_1.body('state').trim(),
-            express_validator_1.body('country').trim(),
-        ]),
+        decorators_1.get('/me'),
         decorators_1.use(middlewares_1.validateRequest),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", [Object, Object, Function]),
         __metadata("design:returntype", Promise)
-    ], AuthController.prototype, "postSignup", null);
-    __decorate([
-        decorators_1.post('/signin'),
-        decorators_1.bodyValidator([
-            express_validator_1.body('email').isEmail().withMessage('Email must be vaild'),
-            express_validator_1.body('password').trim(),
-        ]),
-        decorators_1.use(middlewares_1.validateRequest),
-        __metadata("design:type", Function),
-        __metadata("design:paramtypes", [Object, Object, Function]),
-        __metadata("design:returntype", Promise)
-    ], AuthController.prototype, "postLogin", null);
+    ], AuthController.prototype, "getMe", null);
     AuthController = __decorate([
-        decorators_1.controller('/auth')
+        decorators_1.controller('/user')
     ], AuthController);
     return AuthController;
 }());

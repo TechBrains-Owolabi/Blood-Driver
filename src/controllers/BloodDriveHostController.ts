@@ -6,8 +6,9 @@ import { controller, bodyValidator, post, use, get } from '../decorators';
 import { HttpStatusCodes } from '../enums';
 import { BadRequestError } from '../errors';
 import { validateRequest } from '../middlewares';
+const User = require("../models/User")
 
-@controller('/drivehost')
+@controller('/:userId/drivehost')
 export class BloodDriveHostController {
   @post("/")
   @bodyValidator([
@@ -24,15 +25,26 @@ export class BloodDriveHostController {
   ])
   @use(validateRequest)
   async createBloodDriveHost(req: Request, res: Response, next: NextFunction) {
+    req.body.user = req.params.userId;
+    const id = req.params.userId
     
-    const { email, organization, organizationType, firstName, lastName, phone, phoneType, venue, date, city, state, country, lat, lng, incentive, additionalComment } = req.body;
+    const existingUser = await DB.Models.User.findById(id);
 
-    var currentDate = new Date().toDateString;
-    if(date <= currentDate){
+    if (!existingUser) {
+      throw new BadRequestError('A user with this identity doesnt exist');
+    }
+    
+    const { email, organization, organizationType, firstName, lastName, phone, phoneType, venue, date, city, state, country, lat, lng, incentive, additionalComment, user } = req.body;
+
+    var currentDate = new Date().toDateString();
+    console.log("Current date: " , currentDate);
+    console.log("Supplied date: " + date);
+    
+    if(date < currentDate){
       throw new BadRequestError("Date can not be less than todays date");
     }
 
-    let bloodDriveHost = await DB.Models.BloodDriveHost.create({ email, organization, organizationType, firstName, lastName, venue, date, phone, phoneType, city, state, country, lat, lng, incentive, additionalComment});
+    let bloodDriveHost = await DB.Models.BloodDriveHost.create({ email, organization, organizationType, firstName, lastName, venue, date, phone, phoneType, city, state, country, lat, lng, incentive, additionalComment, user});
 
     res.status(HttpStatusCodes.CREATED).json(bloodDriveHost);
   }

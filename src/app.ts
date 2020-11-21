@@ -8,6 +8,7 @@ import { globalErrorHandler } from './middlewares';
 import './controllers/AuthController';
 import './controllers/RootController';
 import './controllers/BloodDriveHostController';
+import './controllers/UserController';
 
 const app = express();
 

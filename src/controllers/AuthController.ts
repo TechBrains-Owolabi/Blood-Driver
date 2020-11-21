@@ -35,6 +35,8 @@ export class AuthController {
     }
 
     let user = await DB.Models.User.create({ email, password, firstName, lastName, bloodType, phone, phoneType, city, state, country, lat, lng });
+    
+    req.body.userSetId = user.id;
 
     res.status(HttpStatusCodes.CREATED).json(user);
   }
@@ -57,5 +59,7 @@ export class AuthController {
     }
 
     res.status(200).json('Log in success');
+    req.body.userSetId = existingUser.id;
+
   }
 }

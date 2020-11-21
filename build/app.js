@@ -12,6 +12,7 @@ var middlewares_1 = require("./middlewares");
 require("./controllers/AuthController");
 require("./controllers/RootController");
 require("./controllers/BloodDriveHostController");
+require("./controllers/UserController");
 var app = express_1.default();
 app.use(cookie_session_1.default({ keys: ['ldlkdd'] }));
 app.use(body_parser_1.default.urlencoded({ extended: true }));

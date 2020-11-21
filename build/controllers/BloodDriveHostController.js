@@ -52,22 +52,33 @@ var decorators_1 = require("../decorators");
 var enums_1 = require("../enums");
 var errors_1 = require("../errors");
 var middlewares_1 = require("../middlewares");
+var User = require("../models/User");
 var BloodDriveHostController = /** @class */ (function () {
     function BloodDriveHostController() {
     }
     BloodDriveHostController.prototype.createBloodDriveHost = function (req, res, next) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, email, organization, organizationType, firstName, lastName, phone, phoneType, venue, date, city, state, country, lat, lng, incentive, additionalComment, currentDate, bloodDriveHost;
+            var id, existingUser, _a, email, organization, organizationType, firstName, lastName, phone, phoneType, venue, date, city, state, country, lat, lng, incentive, additionalComment, user, currentDate, bloodDriveHost;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        _a = req.body, email = _a.email, organization = _a.organization, organizationType = _a.organizationType, firstName = _a.firstName, lastName = _a.lastName, phone = _a.phone, phoneType = _a.phoneType, venue = _a.venue, date = _a.date, city = _a.city, state = _a.state, country = _a.country, lat = _a.lat, lng = _a.lng, incentive = _a.incentive, additionalComment = _a.additionalComment;
-                        currentDate = new Date().toDateString;
-                        if (date <= currentDate) {
+                        req.body.user = req.params.userId;
+                        id = req.params.userId;
+                        return [4 /*yield*/, AppDatabase_1.DB.Models.User.findById(id)];
+                    case 1:
+                        existingUser = _b.sent();
+                        if (!existingUser) {
+                            throw new errors_1.BadRequestError('A user with this identity doesnt exist');
+                        }
+                        _a = req.body, email = _a.email, organization = _a.organization, organizationType = _a.organizationType, firstName = _a.firstName, lastName = _a.lastName, phone = _a.phone, phoneType = _a.phoneType, venue = _a.venue, date = _a.date, city = _a.city, state = _a.state, country = _a.country, lat = _a.lat, lng = _a.lng, incentive = _a.incentive, additionalComment = _a.additionalComment, user = _a.user;
+                        currentDate = new Date().toDateString();
+                        console.log("Current date: ", currentDate);
+                        console.log("Supplied date: " + date);
+                        if (date < currentDate) {
                             throw new errors_1.BadRequestError("Date can not be less than todays date");
                         }
-                        return [4 /*yield*/, AppDatabase_1.DB.Models.BloodDriveHost.create({ email: email, organization: organization, organizationType: organizationType, firstName: firstName, lastName: lastName, venue: venue, date: date, phone: phone, phoneType: phoneType, city: city, state: state, country: country, lat: lat, lng: lng, incentive: incentive, additionalComment: additionalComment })];
-                    case 1:
+                        return [4 /*yield*/, AppDatabase_1.DB.Models.BloodDriveHost.create({ email: email, organization: organization, organizationType: organizationType, firstName: firstName, lastName: lastName, venue: venue, date: date, phone: phone, phoneType: phoneType, city: city, state: state, country: country, lat: lat, lng: lng, incentive: incentive, additionalComment: additionalComment, user: user })];
+                    case 2:
                         bloodDriveHost = _b.sent();
                         res.status(enums_1.HttpStatusCodes.CREATED).json(bloodDriveHost);
                         return [2 /*return*/];
@@ -115,7 +126,7 @@ var BloodDriveHostController = /** @class */ (function () {
         __metadata("design:returntype", Promise)
     ], BloodDriveHostController.prototype, "getAllBloodDrive", null);
     BloodDriveHostController = __decorate([
-        decorators_1.controller('/drivehost')
+        decorators_1.controller('/:userId/drivehost')
     ], BloodDriveHostController);
     return BloodDriveHostController;
 }());

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BloodDriveHost = void 0;
 var mongoose_1 = require("mongoose");
+var mongoose = require('mongoose');
 var BloodDriveHost = /** @class */ (function () {
     function BloodDriveHost() {
         var schema = new mongoose_1.Schema({
@@ -20,6 +21,11 @@ var BloodDriveHost = /** @class */ (function () {
             additionalComment: { type: String, required: true },
             lat: { type: String, required: false, default: "100.0" },
             lng: { type: String, required: false, default: "100.0" },
+            user: {
+                type: mongoose.Schema.ObjectId,
+                ref: "User",
+                required: true,
+            },
         }, {
             toJSON: {
                 transform: function (doc, ret) {

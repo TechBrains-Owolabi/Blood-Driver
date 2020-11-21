@@ -94,6 +94,13 @@ var User = /** @class */ (function () {
                 });
             });
         };
+        //Reverse Populate with virtuals
+        schema.virtual("bloodDrives", {
+            ref: "BloodDriveHost",
+            localField: "_id",
+            foreignField: "user",
+            justone: false,
+        });
         this._model = mongoose_1.model('User', schema);
     }
     Object.defineProperty(User.prototype, "model", {
