@@ -43,6 +43,7 @@ export class User {
       },
       {
         toJSON: {
+          virtuals: true,
           transform(doc, ret) {
             ret.id = ret._id;
             delete ret.password;

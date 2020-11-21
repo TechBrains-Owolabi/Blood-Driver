@@ -56,6 +56,7 @@ var User = /** @class */ (function () {
             password: { type: String, required: true },
         }, {
             toJSON: {
+                virtuals: true,
                 transform: function (doc, ret) {
                     ret.id = ret._id;
                     delete ret.password;
