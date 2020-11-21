@@ -71,7 +71,6 @@ var AuthController = /** @class */ (function () {
                         return [4 /*yield*/, AppDatabase_1.DB.Models.User.create({ email: email, password: password, firstName: firstName, lastName: lastName, bloodType: bloodType, phone: phone, phoneType: phoneType, city: city, state: state, country: country, lat: lat, lng: lng })];
                     case 2:
                         user = _b.sent();
-                        req.body.userSetId = user.id;
                         res.status(enums_1.HttpStatusCodes.CREATED).json(user);
                         return [2 /*return*/];
                 }
@@ -98,7 +97,6 @@ var AuthController = /** @class */ (function () {
                             throw new errors_1.BadRequestError('Invalid email or password');
                         }
                         res.status(200).json('Log in success');
-                        req.body.userSetId = existingUser.id;
                         return [2 /*return*/];
                 }
             });

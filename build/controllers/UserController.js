@@ -45,27 +45,52 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthController = void 0;
+exports.UserController = void 0;
 var AppDatabase_1 = require("../AppDatabase");
 var decorators_1 = require("../decorators");
 var enums_1 = require("../enums");
 var errors_1 = require("../errors");
 var middlewares_1 = require("../middlewares");
-var AuthController = /** @class */ (function () {
-    function AuthController() {
+var UserController = /** @class */ (function () {
+    function UserController() {
     }
-    AuthController.prototype.getMe = function (req, res, next) {
+    UserController.prototype.updateMe = function (req, res, next) {
         return __awaiter(this, void 0, void 0, function () {
             var id, existingUser;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        id = req.body.setUserId;
+                        id = req.params.userId;
+                        delete (req.body.email);
+                        delete (req.body.password);
+                        console.log("Current ID: ", id);
+                        return [4 /*yield*/, AppDatabase_1.DB.Models.User.findByIdAndUpdate(id, req.body, {
+                                new: true,
+                                runValidators: true,
+                            })];
+                    case 1:
+                        existingUser = _a.sent();
+                        if (!existingUser) {
+                            throw new errors_1.BadRequestError('Cannot update user that doesnt exist');
+                        }
+                        res.status(enums_1.HttpStatusCodes.CREATED).json(existingUser);
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    UserController.prototype.getUser = function (req, res, next) {
+        return __awaiter(this, void 0, void 0, function () {
+            var id, existingUser;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        id = req.body.userId;
                         return [4 /*yield*/, AppDatabase_1.DB.Models.User.findOne({ id: id }).populate("bloodDrives")];
                     case 1:
                         existingUser = _a.sent();
                         if (!existingUser) {
-                            throw new errors_1.BadRequestError('A user with that email already exists');
+                            throw new errors_1.BadRequestError('A user with that email does not exist');
                         }
                         res.status(enums_1.HttpStatusCodes.CREATED).json(existingUser);
                         return [2 /*return*/];
@@ -74,15 +99,22 @@ var AuthController = /** @class */ (function () {
         });
     };
     __decorate([
-        decorators_1.get('/me'),
+        decorators_1.put('/:userId'),
         decorators_1.use(middlewares_1.validateRequest),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", [Object, Object, Function]),
         __metadata("design:returntype", Promise)
-    ], AuthController.prototype, "getMe", null);
-    AuthController = __decorate([
+    ], UserController.prototype, "updateMe", null);
+    __decorate([
+        decorators_1.get('/:userId'),
+        decorators_1.use(middlewares_1.validateRequest),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object, Object, Function]),
+        __metadata("design:returntype", Promise)
+    ], UserController.prototype, "getUser", null);
+    UserController = __decorate([
         decorators_1.controller('/user')
-    ], AuthController);
-    return AuthController;
+    ], UserController);
+    return UserController;
 }());
-exports.AuthController = AuthController;
+exports.UserController = UserController;
