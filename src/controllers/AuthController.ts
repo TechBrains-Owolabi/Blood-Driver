@@ -3,9 +3,9 @@ import { body } from 'express-validator';
 import jwt from "jsonwebtoken"
 
 import { DB } from '../AppDatabase';
-import { controller, bodyValidator, post, get, use } from '../decorators';
+import { controller, bodyValidator, post, get, use, put, del } from '../decorators';
 import { HttpStatusCodes } from '../enums';
-import { BadRequestError } from '../errors';
+import { BadRequestError, NotAuthorizedError } from '../errors';
 import { validateRequest, currentUser } from '../middlewares';
 
 @controller('/auth')
@@ -79,9 +79,72 @@ export class AuthController {
     res.status(HttpStatusCodes.OK).json({ success: true });
   }
 
-  @get("/current-user")
+  @post('/signout')
+  @use(currentUser)
+  @use(validateRequest)
+  async postSignout(req: Request, res: Response, next: NextFunction) {
+    
+    req.session = null;
+
+    res.status(HttpStatusCodes.OK).json({ success: true });
+  }
+
+  @get("/me")
   @use(currentUser)
   getCurrentUser(req: Request, res: Response, next: NextFunction) {
     res.status(HttpStatusCodes.OK).json({ currentUser: req.currentUser || null })
+  }
+
+  @put('/me')
+  @use(validateRequest)
+  @use(currentUser)
+  async updateMe(req: Request, res: Response, next: NextFunction) {
+
+    delete(req.body.email);
+    delete(req.body.password);
+    
+    const id = req.currentUser?.id;
+
+    if(!id){
+      throw new NotAuthorizedError()
+    }
+     
+    const updatedUser = await DB.Models.User.findByIdAndUpdate(id, req.body,  {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false
+    });
+
+    
+    if (!updatedUser) {
+      throw new BadRequestError('Cannot update problem. Possible authentication issue');
+    }
+
+    res.status(HttpStatusCodes.UPDATED).json(updatedUser);
+  
+  }
+
+  @del('/me')
+  @use(validateRequest)
+  @use(currentUser)
+  async deleteMe(req: Request, res: Response, next: NextFunction) {
+
+    const id = req.currentUser?.id;
+
+    if(!id){
+      throw new NotAuthorizedError()
+    }
+    
+    const deletedUser = await DB.Models.User.findByIdAndDelete(id);
+
+    
+    if (!deletedUser) {
+      throw new BadRequestError('Cannot delete problem. Possible authentication issue');
+    }
+
+    req.session = null
+
+    res.status(HttpStatusCodes.UPDATED).json();
+  
   }
 }
