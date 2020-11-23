@@ -39,7 +39,7 @@ export class UserController {
     const existingUser = await DB.Models.User.findOne({ id }).populate("bloodDrives");
 
     if (!existingUser) {
-      throw new BadRequestError('A user with that email does not exist');
+      throw new BadRequestError('A user with that ID does not exist');
     }
 
     res.status(HttpStatusCodes.CREATED).json(existingUser);

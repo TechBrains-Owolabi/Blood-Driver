@@ -79,10 +79,10 @@ export class User {
     });
 
     // Cascade delete blood drive hosts when a user is deleted
-    schema.pre("remove", async function (next) {
-      await this.model("BloodDriveHost").deleteMany({ user: this._id });
-      next();
-    });
+    // schema.pre("remove", async function (next) {
+    //   await this.model("BloodDriveHost").deleteMany({ user: this._id });
+    //   next();
+    // });
 
     this._model = model<IUser>('User', schema);
   }

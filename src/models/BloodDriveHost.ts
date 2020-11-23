@@ -1,4 +1,4 @@
-import { Schema, model, Document, Model } from 'mongoose';
+import { Schema, model, Document, Model, Mongoose } from 'mongoose';
 import { User } from './User';
 const mongoose = require('mongoose')
 
@@ -19,7 +19,7 @@ declare interface IBloodDriveHost extends Document {
     additionalComment: string;
     lat: string;
     lng: string;
-    user: User;
+    user: string;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -34,6 +34,7 @@ export class BloodDriveHost {
         {
           firstName: {type: String, required: true},
           lastName: {type: String, required: true},
+          email:{type: String, required: true},
           organizationType: {type: String, enum: ["Business", "Religious", "Civic/Community", "Government", "Education", "Healthcare", "Other"], default: "Other"},
           organization: {type: String, required: true},
           phoneType:{type: String, enum: ["work", "home", "mobile"], default: "mobile"},

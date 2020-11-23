@@ -41,7 +41,10 @@ export class AuthController {
         id: user.id,
         email: user.email,
       },
-      process.env.JWT_KEY!
+      process.env.JWT_KEY!,
+      {
+        expiresIn: process.env.JWT_EXPIRE!,
+      }
     );
 
     req.session = { jwt: userJWT };
@@ -83,16 +86,19 @@ export class AuthController {
   @use(currentUser)
   @use(validateRequest)
   async postSignout(req: Request, res: Response, next: NextFunction) {
-    
     req.session = null;
-
     res.status(HttpStatusCodes.OK).json({ success: true });
   }
 
   @get("/me")
   @use(currentUser)
-  getCurrentUser(req: Request, res: Response, next: NextFunction) {
-    res.status(HttpStatusCodes.OK).json({ currentUser: req.currentUser || null })
+  async getCurrentUser(req: Request, res: Response, next: NextFunction) {
+    const id = req.currentUser?.id;
+    if(!id){
+      throw new NotAuthorizedError()
+    }
+    const user = await DB.Models.User.findById(id).populate("bloodDrives");
+    res.status(HttpStatusCodes.OK).json({ currentUser: user})
   }
 
   @put('/me')
