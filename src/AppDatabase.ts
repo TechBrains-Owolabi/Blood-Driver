@@ -1,10 +1,11 @@
 import { connect, connection, Connection } from 'mongoose';
-import { User, UserModel, BloodDriveHost, BloodDriveHostModel } from './models';
+import { User, UserModel, BloodDriveHost, BloodDriveHostModel, Hospital, HospitalModel } from './models';
 import { DatabaseConnectionError } from './errors';
 
 declare interface IModels {
   User: UserModel;
   BloodDriveHost: BloodDriveHostModel;
+  Hospital: HospitalModel
 }
 
 
@@ -28,6 +29,7 @@ export class DB {
     this._models = {
       User: new User().model,
       BloodDriveHost: new BloodDriveHost().model,
+      Hospital: new Hospital().model
     };
   }
 

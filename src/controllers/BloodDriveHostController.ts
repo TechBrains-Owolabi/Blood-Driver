@@ -6,7 +6,6 @@ import { controller, bodyValidator, post, use, get, put, del } from '../decorato
 import { HttpStatusCodes } from '../enums';
 import { BadRequestError, NotAuthorizedError } from '../errors';
 import { validateRequest, currentUser } from '../middlewares';
-const User = require("../models/User")
 
 @controller('/drivehost')
 export class BloodDriveHostController {
