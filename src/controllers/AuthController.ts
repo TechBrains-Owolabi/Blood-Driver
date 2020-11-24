@@ -26,29 +26,30 @@ export class AuthController {
   ])
   @use(validateRequest)
   async postSignup(req: Request, res: Response, next: NextFunction) {
-    
+    //get all fields needed from the request body
     const { email, password, firstName, lastName, phone, phoneType, bloodType, city, state, country, lat, lng } = req.body;
-    const existingUser = await DB.Models.User.findOne({ email });
 
+    //first check if an account with that email already exists and throw error if it does
+    const existingUser = await DB.Models.User.findOne({ email });
     if (existingUser) {
       throw new BadRequestError('A user with that email already exists');
     }
 
+    //Create user and create a session
     let user = await DB.Models.User.create({ email, password, firstName, lastName, bloodType, phone, phoneType, city, state, country, lat, lng });
-
-    const userJWT = jwt.sign(
-      {
+    const userJWT = jwt.sign({
         id: user.id,
         email: user.email,
       },
-      process.env.JWT_KEY!,
-      {
+      process.env.JWT_KEY!,{
         expiresIn: process.env.JWT_EXPIRE!,
       }
     );
 
+    //set session on the request
     req.session = { jwt: userJWT };
 
+    //return response
     res.status(HttpStatusCodes.CREATED).json(user);
   }
 
@@ -59,16 +60,22 @@ export class AuthController {
   ])
   @use(validateRequest)
   async postLogin(req: Request, res: Response, next: NextFunction) {
+    //get signin credentials from request body
     const { email, password } = req.body;
+
+    //check if email exists. throw an error if it doesnt
     const existingUser = await DB.Models.User.findOne({ email });
     if (!existingUser) {
       throw new BadRequestError('Invalid email or password');
     }
+
+    //Then check if password matches the one stored in database and throw error if it doesnt
     const isCorrect = await existingUser.comparePassword(password);
     if (!isCorrect) {
       throw new BadRequestError('Invalid email or password');
     }
 
+    //create a session for the signed in user and set the session on the request
     const userJWT = jwt.sign(
       {
         id: existingUser.id,
@@ -76,9 +83,9 @@ export class AuthController {
       },
       process.env.JWT_KEY!
     );
-
     req.session = { jwt: userJWT };
 
+    //return response if any
     res.status(HttpStatusCodes.OK).json({ success: true });
   }
 
@@ -86,6 +93,7 @@ export class AuthController {
   @use(currentUser)
   @use(validateRequest)
   async postSignout(req: Request, res: Response, next: NextFunction) {
+    //destroy session and send response
     req.session = null;
     res.status(HttpStatusCodes.OK).json({ success: true });
   }
@@ -93,10 +101,13 @@ export class AuthController {
   @get("/me")
   @use(currentUser)
   async getCurrentUser(req: Request, res: Response, next: NextFunction) {
+    //get ID from session. throw error if session object doesnt exist
     const id = req.currentUser?.id;
     if(!id){
       throw new NotAuthorizedError()
     }
+
+    //get user and return response
     const user = await DB.Models.User.findById(id).populate("bloodDrives");
     res.status(HttpStatusCodes.OK).json({ currentUser: user})
   }
@@ -105,52 +116,48 @@ export class AuthController {
   @use(validateRequest)
   @use(currentUser)
   async updateMe(req: Request, res: Response, next: NextFunction) {
-
+    //make sure email and password fields are not sent to be updated
     delete(req.body.email);
     delete(req.body.password);
     
+    //get ID from session. throw error if session object doesnt exist
     const id = req.currentUser?.id;
-
     if(!id){
       throw new NotAuthorizedError()
     }
      
+    //update user. throw error if update fails for some reason
     const updatedUser = await DB.Models.User.findByIdAndUpdate(id, req.body,  {
       new: true,
       runValidators: true,
       useFindAndModify: false
     });
-
-    
     if (!updatedUser) {
       throw new BadRequestError('Cannot update problem. Possible authentication issue');
     }
 
+    //return response
     res.status(HttpStatusCodes.UPDATED).json(updatedUser);
-  
   }
 
   @del('/me')
   @use(validateRequest)
   @use(currentUser)
   async deleteMe(req: Request, res: Response, next: NextFunction) {
-
+    //get ID from session. throw error if session object doesnt exist
     const id = req.currentUser?.id;
-
     if(!id){
       throw new NotAuthorizedError()
     }
     
+    //delete user. throw error if delete fails for some reason
     const deletedUser = await DB.Models.User.findByIdAndDelete(id);
-
-    
     if (!deletedUser) {
       throw new BadRequestError('Cannot delete problem. Possible authentication issue');
     }
 
+    //delete session and return response
     req.session = null
-
     res.status(HttpStatusCodes.UPDATED).json();
-  
   }
 }
