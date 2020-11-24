@@ -6,7 +6,7 @@ import { controller, bodyValidator, post, use, get, put, del } from '../decorato
 import { HttpStatusCodes } from '../enums';
 import { BadRequestError, NotAuthorizedError } from '../errors';
 import { validateRequest, currentUser } from '../middlewares';
-var nodemailer = require('nodemailer'); 
+import { EmailUtil } from '../services';
 
 @controller('/hospital')
 export class HospitalController {
@@ -27,6 +27,18 @@ export class HospitalController {
   async createBloodDriveHost(req: Request, res: Response, next: NextFunction) {
     const { email, registrationNumber, name, phone, capacity, address, city, state, country, lat, lng, images } = req.body;
     let hospital = await DB.Models.Hospital.create({ email, registrationNumber, name, capacity, address, phone, city, state, country, lat, lng, images});
-    res.status(HttpStatusCodes.CREATED).json(hospital);
+    if(!hospital){
+        throw new BadRequestError("Hospital details was not saved succesfully. Please try again")
+    }
+    const toEmail = email
+    const emailSubject = "Test test";
+    const emailBody = "Thank you for adding your hospital to the Blood Drive portal. You will be notified when people mention your hospital to donate blood through this email"
+    console.log("To Email: " + toEmail);
+    console.log("Subject: " + emailSubject);
+    console.log("Body: " + emailBody);
+    
+    await EmailUtil.sendEmail(toEmail, emailSubject, emailBody);
+    
+    res.status(HttpStatusCodes.CREATED).json({success:true});
   }
 }

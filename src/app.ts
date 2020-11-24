@@ -9,6 +9,7 @@ import './controllers/AuthController';
 import './controllers/RootController';
 import './controllers/BloodDriveHostController';
 import './controllers/UserController';
+import './controllers/HospitalController';
 import { HttpStatusCodes } from './enums';
 
 const app = express();
