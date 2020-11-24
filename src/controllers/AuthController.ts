@@ -37,17 +37,6 @@ export class AuthController {
 
     //Create user and create a session
     let user = await DB.Models.User.create({ email, password, firstName, lastName, bloodType, phone, phoneType, city, state, country, lat, lng });
-    const userJWT = jwt.sign({
-        id: user.id,
-        email: user.email,
-      },
-      process.env.JWT_KEY!,{
-        expiresIn: process.env.JWT_EXPIRE!,
-      }
-    );
-
-    //set session on the request
-    req.session = { jwt: userJWT };
 
     //return response
     res.status(HttpStatusCodes.CREATED).json(user);
