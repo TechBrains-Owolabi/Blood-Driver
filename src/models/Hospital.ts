@@ -1,4 +1,5 @@
 import { Schema, model, Document, Model } from 'mongoose';
+import { Password } from '../services';
 
 declare interface IHospital extends Document {
     name: string;
@@ -12,9 +13,11 @@ declare interface IHospital extends Document {
     country: string;
     lat: string;
     lng: string;
+    passKey: string;
     images: Array<string>
     createdAt?: Date;
     updatedAt?: Date;
+    comparePassword: (password: string) => boolean;
 }
   
 export interface HospitalModel extends Model<IHospital> {}
@@ -37,6 +40,7 @@ export class Hospital {
         images:{type: [], required: true},
         lat: { type: String, required: false, default:"100.0"},
         lng: { type: String, required: false, default:"100.0" },
+        passKey:{type: String, required: [true, "Please provide a pass key. This key will be required for updating or deleting this hospital"] },
       },
       {
         toJSON: {
@@ -44,12 +48,26 @@ export class Hospital {
             ret.id = ret._id;
             delete ret.__v;
             delete ret._id;
+            delete ret.passKey;
           },
         },
         timestamps: true,
       }
     );
     
+    schema.pre('save', async function (done) {
+      if (this.isModified('passKey')) {
+        const hashed = await Password.toHash(this.get('passKey'));
+        this.set('passKey', hashed);
+      }
+      done();
+    });
+
+    schema.methods.comparePassword = async function (
+      passKey: string
+    ): Promise<boolean> {
+      return await Password.compare(this.passKey, passKey);
+    };
 
     this._model = model<IHospital>('Hospital', schema);
   }

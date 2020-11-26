@@ -42,7 +42,7 @@ test('should signin a user', async () => {
     .expect(200);
 });
 
-test('should return a user because no user is signed in', async () => {
+test('should return a user ', async () => {
   await request(app)
     .get('/auth/me')
     .expect(200);
