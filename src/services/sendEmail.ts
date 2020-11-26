@@ -21,7 +21,7 @@ export class EmailUtil {
             if (error) {
                 console.log("Error sending email");
             } else {
-                console.log('Email sent successfully');
+                return true
             }
         }); 
     }
