@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import jwt from "jsonwebtoken"
 
 const geocoder = require('../services/geocoder')
+import { EmailUtil } from '../services';
 
 import { DB } from '../AppDatabase';
 import { controller, bodyValidator, post, get, use, put, del } from '../decorators';
@@ -37,6 +38,14 @@ export class AuthController {
 
     //Create user and create a session
     let user = await DB.Models.User.create({ email, password, firstName, lastName, bloodType, phone, phoneType, address});
+
+    //Prepare email details
+    const toEmail = email
+    const emailSubject = "Congratulations! We are happy to have you";
+    const emailBody = `Welcome on board ${firstName} ${lastName}.....\nHere's to saving the world one blood donation at a time`;
+    
+    //send email
+    await EmailUtil.sendEmail(toEmail, emailSubject, emailBody);
 
     //return response
     res.status(HttpStatusCodes.CREATED).json(user);
@@ -129,6 +138,7 @@ export class AuthController {
       req.body.location.zipcode = newAddress[0].zipcode
       req.body.location.country = newAddress[0].countryCode
     }
+
     //update user. throw error if update fails for some reason
     const updatedUser = await DB.Models.User.findByIdAndUpdate(id, req.body,  {
       new: true,

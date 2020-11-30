@@ -6,7 +6,6 @@ import { controller, bodyValidator, post, use, get, put, del } from '../decorato
 import { HttpStatusCodes } from '../enums';
 import { BadRequestError, NotAuthorizedError } from '../errors';
 import { validateRequest, currentUser } from '../middlewares';
-import { Hospital } from '../models';
 import { EmailUtil } from '../services';
 
 @controller('/hospital')
@@ -93,6 +92,22 @@ export class HospitalController {
     delete(req.body.id);
     delete(req.body.email)
     delete(req.body.passKey);
+
+
+    //Make sure to update geocoded address when a user updates the address. For some reason, I cant get this to work as a mongoose middleware
+    if(req.body.address){
+      const newAddress = await geocoder.geocode(req.body.address)
+      const user = await DB.Models.User.findById(hospitalId);
+      req.body.location = user?.location
+      req.body.location.coordinates = [newAddress[0].latitude, newAddress[0].longitude]
+      req.body.location.street = newAddress[0].streetName
+      req.body.location.formattedAddress = newAddress[0].formattedAddress
+      req.body.location.city = newAddress[0].city
+      req.body.location.state = newAddress[0].stateCode
+      req.body.location.number = newAddress[0].streetNumber
+      req.body.location.zipcode = newAddress[0].zipcode
+      req.body.location.country = newAddress[0].countryCode
+    }
     
     //Update the hospital. Throw error if update fails
     const updatedHospital = await DB.Models.Hospital.findByIdAndUpdate(hospital, req.body,  {

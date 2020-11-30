@@ -48,6 +48,7 @@ export class Hospital {
           city: String,
           state: String,
           zipcode: String,
+          number: String,
           country: String
         },
         images:{type: [String], required: true},
@@ -67,24 +68,26 @@ export class Hospital {
     );
     
     schema.pre('save', async function (done) {
-      if(this.isModified('address')){
-        const loc = await geocoder.geocode(this.get('address'));
-        this.set('location', {
-          type: 'Point',
-          coordinates: [loc[0].latitude, loc[0].longitude],
-          formattedAddress: loc[0].formattedAddress,
-          street: loc[0].streetName,
-          city: loc[0].city,
-          state: loc[0].stateCode,
-          zipcode: loc[0].zipcode,
-          country: loc[0].countryCode,
-        })
-      }
-      
       if (this.isModified('passKey')) {
         const hashed = await Password.toHash(this.get('passKey'));
         this.set('passKey', hashed);
       }
+      done();
+    });
+
+    schema.pre('save', async function (done) {
+      const loc = await geocoder.geocode(this.get('address'));
+      this.set('location', {
+        type: 'Point',
+        coordinates: [loc[0].latitude, loc[0].longitude],
+        formattedAddress: loc[0].formattedAddress,
+        street: loc[0].streetName,
+        city: loc[0].city,
+        state: loc[0].stateCode,
+        zipcode: loc[0].zipcode,
+        number: loc[0].streetNumber,
+        country: loc[0].countryCode,
+      })
       done();
     });
 
