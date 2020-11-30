@@ -16,8 +16,6 @@ const hospitalOne = {
     venue: "LUTH",
     registrationNumber: "230099FED",
     images:["7d7sisjsisnjnskjxsichusisuiscjnxcsij.jpg"],
-    lat: "100",
-    lng: "200",
     passKey: "12345678"
 };
 
