@@ -27,10 +27,10 @@ export class HospitalController {
   @use(validateRequest)
   async createBloodDriveHost(req: Request, res: Response, next: NextFunction) {
     //get all fields needed from the request body
-    const { email, registrationNumber, name, phone, capacity, address, city, state, country, lat, lng, images, passKey } = req.body;
+    const { email, registrationNumber, name, phone, capacity, address, images, passKey } = req.body;
 
     //Create hospital. Throw error if insertion fails
-    let hospital = await DB.Models.Hospital.create({ email, registrationNumber, name, capacity, address, phone, city, state, country, lat, lng, images, passKey});
+    let hospital = await DB.Models.Hospital.create({ email, registrationNumber, name, capacity, address, phone, images, passKey});
     if(!hospital){
         throw new BadRequestError("Hospital details was not saved succesfully. Please try again")
     }

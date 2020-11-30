@@ -1,5 +1,6 @@
 import { Schema, model, Document, Model } from 'mongoose';
 import { Password } from '../services';
+const geocoder = require('../services/geocoder')
 
 declare interface IHospital extends Document {
     name: string;
@@ -8,11 +9,7 @@ declare interface IHospital extends Document {
     email: string;
     phone: string;
     address: string;
-    city: string;
-    state: string;
-    country: string;
-    lat: string;
-    lng: string;
+    location?: Object;
     passKey: string;
     images: Array<string>
     createdAt?: Date;
@@ -34,12 +31,26 @@ export class Hospital {
         email:{type: String, required: [true, "Please provide an email"],  unique: [true, "The email provided is already associated with another hospital"]},
         phone: { type: String, required: [true, "Please provide a phone number"] },
         address:{type: String, required: [true, "Please provide an address"] },
-        city: {type: String, required: true},
-        state: {type: String, required: true},
-        country: { type: String, required: true },
-        images:{type: [], required: true},
-        lat: { type: String, required: false, default:"100.0"},
-        lng: { type: String, required: false, default:"100.0" },
+        location:{
+          //GeoJSON Point
+          type:{
+            type: String,
+            enum: ['Point'],
+            required: false,
+          },
+            coordinates: {
+            type:[Number], 
+            required: false,
+            index: '2dsphere'
+          },
+          formattedAddress: String,
+          street: String,
+          city: String,
+          state: String,
+          zipcode: String,
+          country: String
+        },
+        images:{type: [String], required: true},
         passKey:{type: String, required: [true, "Please provide a pass key. This key will be required for updating or deleting this hospital"] },
       },
       {
@@ -56,6 +67,20 @@ export class Hospital {
     );
     
     schema.pre('save', async function (done) {
+      if(this.isModified('address')){
+        const loc = await geocoder.geocode(this.get('address'));
+        this.set('location', {
+          type: 'Point',
+          coordinates: [loc[0].latitude, loc[0].longitude],
+          formattedAddress: loc[0].formattedAddress,
+          street: loc[0].streetName,
+          city: loc[0].city,
+          state: loc[0].stateCode,
+          zipcode: loc[0].zipcode,
+          country: loc[0].countryCode,
+        })
+      }
+      
       if (this.isModified('passKey')) {
         const hashed = await Password.toHash(this.get('passKey'));
         this.set('passKey', hashed);

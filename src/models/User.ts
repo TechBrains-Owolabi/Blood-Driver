@@ -1,4 +1,5 @@
 import { Password } from '../services';
+const geocoder = require('../services/geocoder')
 
 import { Schema, model, Document, Model } from 'mongoose';
 
@@ -10,11 +11,8 @@ declare interface IUser extends Document {
   bloodType: string;
   phone: string;
   phoneType: string;
-  city: string;
-  state: string;
-  country: string;
-  lat: string;
-  lng: string;
+  address: string;
+  location?: Object
   createdAt?: Date;
   updatedAt?: Date;
   comparePassword: (password: string) => boolean;
@@ -34,11 +32,26 @@ export class User {
         phone: { type: String, required: true, maxlength: [11, "Phone cannot be more than 11 characters"],
         minlength: [11, "Phone cannot be less than 11 characters"],},
         phoneType:{type: String, enum: ["work", "home", "mobile"], default: "mobile",},
-        city: {type: String, required: true},
-        state: {type: String, required: true},
-        country: { type: String, required: true },
-        lat: { type: String, required: false, default:"100.0"},
-        lng: { type: String, required: false, default:"100.0" },
+        address: {type: String, required: true},
+        location:{
+          //GeoJSON Point
+          type:{
+            type: String,
+            enum: ['Point'],
+            required: false,
+          },
+            coordinates: {
+            type:[Number], 
+            required: false,
+            index: '2dsphere'
+          },
+          formattedAddress: String,
+          street: String,
+          city: String,
+          number: String,
+          zipcode: String,
+          country: String
+        },
         email: { type: String, required: true, unique: [true, "Duplicate email in records"]},
         password: { type: String, required: true },
       },
@@ -63,6 +76,24 @@ export class User {
       }
       done();
     });
+
+    schema.pre('save', async function (done) {
+      const loc = await geocoder.geocode(this.get('address'));
+      this.set('location', {
+        type: 'Point',
+        coordinates: [loc[0].latitude, loc[0].longitude],
+        formattedAddress: loc[0].formattedAddress,
+        street: loc[0].streetName,
+        city: loc[0].city,
+        state: loc[0].stateCode,
+        zipcode: loc[0].zipcode,
+        number: loc[0].streetNumber,
+        country: loc[0].countryCode,
+      })
+      done();
+    });
+
+
 
     schema.methods.comparePassword = async function (
       password: string

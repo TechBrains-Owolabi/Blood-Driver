@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import { body } from 'express-validator';
 import jwt from "jsonwebtoken"
 
+const geocoder = require('../services/geocoder')
+
 import { DB } from '../AppDatabase';
 import { controller, bodyValidator, post, get, use, put, del } from '../decorators';
 import { HttpStatusCodes } from '../enums';
@@ -20,14 +22,12 @@ export class AuthController {
     body('firstName').trim().isLength({min:2}).withMessage("First name must be atleast 2 characters"),
     body('lastName').trim().isLength({min:2}).withMessage("Last name must be atleast 2 characters"),
     body('phone').trim().isLength({min:11, max:11}).withMessage("Pnone number must be 11 characters"),
-    body('city').trim().not().isEmpty().withMessage("City cannot be empty"),
-    body('state').trim().not().isEmpty().withMessage("State cannot be empty"),
-    body('country').trim().not().isEmpty().withMessage("Country cannot be empty"),
+    body('address').trim().not().isEmpty().withMessage("Address cannot be empty"),
   ])
   @use(validateRequest)
   async postSignup(req: Request, res: Response, next: NextFunction) {
     //get all fields needed from the request body
-    const { email, password, firstName, lastName, phone, phoneType, bloodType, city, state, country, lat, lng } = req.body;
+    const { email, password, firstName, lastName, phone, phoneType, bloodType, address} = req.body;
 
     //first check if an account with that email already exists and throw error if it does
     const existingUser = await DB.Models.User.findOne({ email });
@@ -36,7 +36,7 @@ export class AuthController {
     }
 
     //Create user and create a session
-    let user = await DB.Models.User.create({ email, password, firstName, lastName, bloodType, phone, phoneType, city, state, country, lat, lng });
+    let user = await DB.Models.User.create({ email, password, firstName, lastName, bloodType, phone, phoneType, address});
 
     //return response
     res.status(HttpStatusCodes.CREATED).json(user);
@@ -114,7 +114,21 @@ export class AuthController {
     if(!id){
       throw new NotAuthorizedError()
     }
-     
+
+    //Make sure to update geocoded address when a user updates the address. For some reason, I cant get this to work as a mongoose middleware
+    if(req.body.address){
+      const newAddress = await geocoder.geocode(req.body.address)
+      const user = await DB.Models.User.findById(id);
+      req.body.location = user?.location
+      req.body.location.coordinates = [newAddress[0].latitude, newAddress[0].longitude]
+      req.body.location.street = newAddress[0].streetName
+      req.body.location.formattedAddress = newAddress[0].formattedAddress
+      req.body.location.city = newAddress[0].city
+      req.body.location.state = newAddress[0].stateCode
+      req.body.location.number = newAddress[0].streetNumber
+      req.body.location.zipcode = newAddress[0].zipcode
+      req.body.location.country = newAddress[0].countryCode
+    }
     //update user. throw error if update fails for some reason
     const updatedUser = await DB.Models.User.findByIdAndUpdate(id, req.body,  {
       new: true,
