@@ -1,11 +1,14 @@
 import { Password } from '../services';
 const geocoder = require('../services/geocoder')
+const crypto = require("crypto");
 
 import { Schema, model, Document, Model } from 'mongoose';
 
 declare interface IUser extends Document {
   email: string;
   password: string;
+  resetPasswordToken?: String,
+  resetPasswordExpire?: Date,
   firstName: string;
   lastName: string;
   bloodType: string;
@@ -16,6 +19,7 @@ declare interface IUser extends Document {
   createdAt?: Date;
   updatedAt?: Date;
   comparePassword: (password: string) => boolean;
+  getPasswordResetToken: () => string;
 }
 
 export interface UserModel extends Model<IUser> {}
@@ -54,6 +58,8 @@ export class User {
         },
         email: { type: String, required: true, unique: [true, "Duplicate email in records"]},
         password: { type: String, required: true },
+        resetPasswordToken: String,
+        resetPasswordExpire: Date,
       },
       {
         toJSON: {
@@ -93,12 +99,23 @@ export class User {
       done();
     });
 
-
-
+    //Compare passwords
     schema.methods.comparePassword = async function (
       password: string
     ): Promise<boolean> {
       return await Password.compare(this.password, password);
+    };
+
+    // Generate and hash password reset token
+    schema.methods.getPasswordResetToken = async function () {
+      const resetToken = crypto.randomBytes(20).toString("hex");
+      this.resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+        //Make reset token expire in 30 minutes
+      this.resetPasswordExpire = Date.now() + 30 * 60 * 1000;
+      return resetToken;
     };
 
     //Reverse Populate with virtuals

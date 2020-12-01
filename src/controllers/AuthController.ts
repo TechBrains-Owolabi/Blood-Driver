@@ -2,11 +2,12 @@ import { NextFunction, Request, Response } from 'express';
 import { body } from 'express-validator';
 import jwt from "jsonwebtoken"
 
+const crypto = require("crypto");
 const geocoder = require('../services/geocoder')
 import { EmailUtil } from '../services';
 
 import { DB } from '../AppDatabase';
-import { controller, bodyValidator, post, get, use, put, del } from '../decorators';
+import { controller, bodyValidator, post, get, use, put, del} from '../decorators';
 import { HttpStatusCodes } from '../enums';
 import { BadRequestError, NotAuthorizedError } from '../errors';
 import { validateRequest, currentUser } from '../middlewares';
@@ -173,4 +174,84 @@ export class AuthController {
     req.session = null
     res.status(HttpStatusCodes.UPDATED).json();
   }
+
+
+  @post('/forgotpassword')
+  @bodyValidator([
+    body('email').isEmail().withMessage('Email must be vaild'),
+  ])
+  @use(validateRequest)
+  async forgotPassword(req: Request, res: Response, next: NextFunction) {
+    // Get the email from the request body
+    const { email } = req.body;
+    const user = await DB.Models.User.findOne({ email });
+
+    if (!user) {
+      throw new BadRequestError("There is no user with that email");
+    }
+
+    const resetToken = await user.getPasswordResetToken();
+
+    await user.save({ validateBeforeSave: false });
+
+    const resetUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/auth/resetpassword/${resetToken}`;
+
+    const message = `You are recieving this email because you (or someone else) has requested the reset of your password. Please make a POST request to:${resetUrl}\nThis link expires in 30 minutes`;
+
+    try {
+      await EmailUtil.sendEmail( email, "Password reset token", message);
+      res.status(HttpStatusCodes.OK).json({
+        success: true,
+        data: "Email sent succesfully",
+      });
+    } catch (error) {
+      console.log(error);
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+      throw new BadRequestError("Email could not be sent");
+    }
+  }
+
+
+  @put('/resetpassword/:resettoken')
+  @use(validateRequest)
+  async resetPassword(req: Request, res: Response, next: NextFunction) {
+
+    const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.resettoken)
+    .digest("hex");
+    const user = await DB.Models.User.findOne({ resetPasswordToken })
+
+    if (!user) {
+      throw new BadRequestError("Invalid token");
+    }
+
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+
+    //create a session for the signed in user and set the session on the request
+    const userJWT = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      process.env.JWT_KEY!
+    );
+    req.session = { jwt: userJWT };
+
+    res.status(HttpStatusCodes.CREATED).json({
+      success: true,
+      message: "Password reset successfully"
+    });
+  }
+
+
 }
+
+
