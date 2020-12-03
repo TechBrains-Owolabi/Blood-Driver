@@ -63,7 +63,7 @@ export class AuthController {
     const { email, password } = req.body;
 
     //check if email exists. throw an error if it doesnt
-    const existingUser = await DB.Models.User.findOne({ email });
+    const existingUser = await DB.Models.User.findOne({ email }).select("+password");
     if (!existingUser) {
       throw new BadRequestError('Invalid email or password');
     }
@@ -75,8 +75,7 @@ export class AuthController {
     }
 
     //create a session for the signed in user and set the session on the request
-    const userJWT = jwt.sign(
-      {
+    const userJWT = jwt.sign({
         id: existingUser.id,
         email: existingUser.email,
       },
@@ -182,24 +181,24 @@ export class AuthController {
   ])
   @use(validateRequest)
   async forgotPassword(req: Request, res: Response, next: NextFunction) {
-    // Get the email from the request body
+    // Get the email from the request body. check if user with that email exists. If not, throw error
     const { email } = req.body;
     const user = await DB.Models.User.findOne({ email });
-
     if (!user) {
       throw new BadRequestError("There is no user with that email");
     }
 
+    //Create a password reset token field and save it on the user object
     const resetToken = await user.getPasswordResetToken();
-
     await user.save({ validateBeforeSave: false });
 
+    // Form the resetUrl from baseurl and reset token and create message to be sent to the user
     const resetUrl = `${req.protocol}://${req.get(
       "host"
     )}/auth/resetpassword/${resetToken}`;
-
     const message = `You are recieving this email because you (or someone else) has requested the reset of your password. Please make a POST request to:${resetUrl}\nThis link expires in 30 minutes`;
 
+    //Send message to the user. Unset the resetPasswordToken field on the user object if email fails to send
     try {
       await EmailUtil.sendEmail( email, "Password reset token", message);
       res.status(HttpStatusCodes.OK).json({
@@ -219,25 +218,30 @@ export class AuthController {
   @put('/resetpassword/:resettoken')
   @use(validateRequest)
   async resetPassword(req: Request, res: Response, next: NextFunction) {
-
+    //get the password token from the URL, hash it and try to get it from the database.Throw an error if it doesnt
     const resetPasswordToken = crypto
     .createHash("sha256")
     .update(req.params.resettoken)
     .digest("hex");
-    const user = await DB.Models.User.findOne({ resetPasswordToken })
-
+    const user = await DB.Models.User.findOne({ 
+      resetPasswordToken: resetPasswordToken,
+      resetPasswordExpire: { $gt: new Date() } 
+    })
     if (!user) {
       throw new BadRequestError("Invalid token");
     }
 
+    //get the new password from the request body and set some fields to undefined so that the user cant use the link and token again
+    //We dont need to hash the password here. The middleware in mongoose handles that already
     user.password = req.body.password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
+
+    //Save the use 
     await user.save();
 
     //create a session for the signed in user and set the session on the request
-    const userJWT = jwt.sign(
-      {
+    const userJWT = jwt.sign({
         id: user.id,
         email: user.email,
       },
@@ -247,7 +251,7 @@ export class AuthController {
 
     res.status(HttpStatusCodes.CREATED).json({
       success: true,
-      message: "Password reset successfully"
+      message: "Password reset successfully. User has been signed in"
     });
   }
 
